@@ -1,5 +1,4 @@
 export * from "@init-modules/auth-client";
-export { AuthDialogFrame, createAuthRuntime } from "@init-modules/auth-nextjs";
 export type {
 	AuthCredentialsActionsState,
 	AuthDialogBodyRenderProps,
@@ -10,6 +9,7 @@ export type {
 	AuthRuntimeHookFactories,
 	AuthSessionActionsState,
 } from "@init-modules/auth-nextjs";
+export { AuthDialogFrame, createAuthRuntime } from "@init-modules/auth-nextjs";
 export * from "./domain";
 export * from "./errors";
 export * from "./runtime-hooks";

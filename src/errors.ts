@@ -1,11 +1,13 @@
 import axios from "axios";
 
-type AuthActionErrorIntent = "login" | "register";
+type AuthActionErrorIntent = "login" | "register" | "password-reset";
 
 const AUTH_ACTION_FALLBACK_MESSAGES: Record<AuthActionErrorIntent, string> = {
 	login: "Не удалось войти. Проверьте данные и попробуйте ещё раз.",
 	register:
 		"Не удалось завершить регистрацию. Проверьте данные и попробуйте ещё раз.",
+	"password-reset":
+		"Не удалось выполнить сброс пароля. Проверьте данные и попробуйте ещё раз.",
 };
 
 const getFirstNestedMessage = (value: unknown): string | null => {
@@ -42,19 +44,34 @@ const getFirstNestedMessage = (value: unknown): string | null => {
 	return null;
 };
 
+const readApiErrorMessage = (value: unknown) => {
+	if (!value || typeof value !== "object") {
+		return null;
+	}
+
+	const payload = value as { errors?: unknown; message?: unknown };
+
+	return typeof payload.message === "string"
+		? payload.message
+		: getFirstNestedMessage(payload.errors);
+};
+
 export const getAuthActionErrorMessage = (
 	error: unknown,
 	intent: AuthActionErrorIntent,
 ) => {
 	if (axios.isAxiosError(error)) {
-		const apiMessage =
-			typeof error.response?.data?.message === "string"
-				? error.response.data.message
-				: getFirstNestedMessage(error.response?.data?.errors);
+		const apiMessage = readApiErrorMessage(error.response?.data);
 
 		if (apiMessage) {
 			return apiMessage;
 		}
+	}
+
+	const apiMessage = readApiErrorMessage(error);
+
+	if (apiMessage) {
+		return apiMessage;
 	}
 
 	if (error instanceof Error && error.message) {

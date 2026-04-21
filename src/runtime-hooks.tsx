@@ -11,9 +11,9 @@ import {
 } from "@init-modules/auth-client";
 import type {
 	AuthCredentialsActionsState,
+	AuthGoogleActionsState,
 	AuthRuntimeBaseState,
 	AuthSessionActionsState,
-	AuthGoogleActionsState,
 } from "@init-modules/auth-nextjs";
 import type { Dispatch, SetStateAction } from "react";
 import { useCallback, useEffect, useState } from "react";
@@ -229,13 +229,13 @@ export const createAuthRuntimeHooks = <
 				setAuthState((current) =>
 					current
 						? {
-							...current,
-							user: response.user as User,
-						}
-					: ({
-							token: null,
-							user: response.user as User,
-						} as State),
+								...current,
+								user: response.user as User,
+							}
+						: ({
+								token: null,
+								user: response.user as User,
+							} as State),
 				);
 			},
 			[setAuthState],

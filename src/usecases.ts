@@ -1,5 +1,5 @@
 import z from "zod";
-import { userRoleSchema, type UserRole } from "./domain";
+import { type UserRole, userRoleSchema } from "./domain";
 import type {
 	AuthActionsService,
 	CredentialsService,
@@ -27,6 +27,18 @@ export const credentialsRegisterPayloadSchema = z.object({
 	role: userRoleSchema.optional(),
 });
 
+export const credentialsPasswordResetPayloadSchema = z.object({
+	email: z.email(),
+	url: z.url(),
+});
+
+export const credentialsRestorePasswordPayloadSchema = z.object({
+	email: z.email(),
+	token: z.string().min(1),
+	password: z.string().min(8),
+	password_confirmation: z.string().min(8),
+});
+
 export const googleAuthRedirectUrlPayloadSchema = z.object({
 	redirectUrl: z.string(),
 	role: userRoleSchema.optional(),
@@ -40,10 +52,18 @@ export type CredentialsLoginPayload = z.infer<
 export type CredentialsRegisterPayload = z.infer<
 	typeof credentialsRegisterPayloadSchema
 >;
+export type CredentialsPasswordResetPayload = z.infer<
+	typeof credentialsPasswordResetPayloadSchema
+>;
+export type CredentialsRestorePasswordPayload = z.infer<
+	typeof credentialsRestorePasswordPayloadSchema
+>;
 export type GoogleAuthRedirectUrlPayload = z.infer<
 	typeof googleAuthRedirectUrlPayloadSchema
 >;
-export type GoogleAuthTokenPayload = z.infer<typeof googleAuthTokenPayloadSchema>;
+export type GoogleAuthTokenPayload = z.infer<
+	typeof googleAuthTokenPayloadSchema
+>;
 
 const deleteCookie = async (cookieStore: AuthCookieStore, name: string) => {
 	if (cookieStore.delete) {
@@ -112,6 +132,16 @@ export const createCredentialsUseCase = ({
 		const response = await service.register(payload);
 		await cookieStore.set?.("token", response.token);
 		return response;
+	},
+
+	async requestPasswordReset(data: CredentialsPasswordResetPayload) {
+		const payload = credentialsPasswordResetPayloadSchema.parse(data);
+		return await service.requestPasswordReset(payload);
+	},
+
+	async restorePassword(data: CredentialsRestorePasswordPayload) {
+		const payload = credentialsRestorePasswordPayloadSchema.parse(data);
+		return await service.restorePassword(payload);
 	},
 });
 

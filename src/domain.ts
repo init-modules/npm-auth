@@ -41,6 +41,18 @@ export interface RegisterRequest<Role = UserRole> {
 	role?: Role;
 }
 
+export interface PasswordResetRequest {
+	email: string;
+	url: string;
+}
+
+export interface RestorePasswordRequest {
+	email: string;
+	token: string;
+	password: string;
+	password_confirmation: string;
+}
+
 export interface GoogleAuthRedirectRequest<Role = UserRole> {
 	redirectUrl: string;
 	role?: Role;

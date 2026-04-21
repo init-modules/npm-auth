@@ -1,8 +1,10 @@
-import type { UserRole } from "./domain";
 import type {
 	GoogleAuthRedirectRequest,
 	LoginRequest,
+	PasswordResetRequest,
 	RegisterRequest,
+	RestorePasswordRequest,
+	UserRole,
 } from "./domain";
 import {
 	accountSummaryResponseSchema,
@@ -11,7 +13,9 @@ import {
 	logoutAllResponseSchema,
 	logoutResponseSchema,
 	meResponseSchema,
+	passwordResetResponseSchema,
 	registerResponseSchema,
+	restorePasswordResponseSchema,
 } from "./schemas";
 
 export type AuthApiClient = {
@@ -67,6 +71,16 @@ export const createCredentialsService = (api: AuthApiClient) => ({
 	async register(data: RegisterRequest) {
 		const response = await api.post("/auth/v1/register", data);
 		return registerResponseSchema.parse(response.data);
+	},
+
+	async requestPasswordReset(data: PasswordResetRequest) {
+		const response = await api.post("/auth/v1/restore-send", data);
+		return passwordResetResponseSchema.parse(response.data);
+	},
+
+	async restorePassword(data: RestorePasswordRequest) {
+		const response = await api.post("/auth/v1/restore-password", data);
+		return restorePasswordResponseSchema.parse(response.data);
 	},
 });
 
