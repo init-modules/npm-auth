@@ -72,7 +72,7 @@ const waitForGooglePopupResult = ({
 	requestId: string;
 	url: string;
 }) =>
-	new Promise<string>((resolve, reject) => {
+	new Promise<void>((resolve, reject) => {
 		const popup = openCenteredPopup(url);
 
 		if (!popup) {
@@ -126,12 +126,7 @@ const waitForGooglePopupResult = ({
 				return;
 			}
 
-			if (!event.data.token) {
-				reject(new GoogleAuthError("invalid_popup_response"));
-				return;
-			}
-
-			resolve(event.data.token);
+			resolve();
 		};
 
 		const closeWatcher = window.setInterval(() => {
@@ -234,13 +229,13 @@ export const createAuthRuntimeHooks = <
 				setAuthState((current) =>
 					current
 						? {
-								...current,
-								user: response.user as User,
-							}
-						: ({
-								token: cookieStore.get?.("token") ?? null,
-								user: response.user as User,
-							} as State),
+							...current,
+							user: response.user as User,
+						}
+					: ({
+							token: null,
+							user: response.user as User,
+						} as State),
 				);
 			},
 			[setAuthState],
@@ -248,13 +243,12 @@ export const createAuthRuntimeHooks = <
 
 		const refreshSession = useCallback(async () => {
 			const user = await authActionsUseCase.me();
-			const token = cookieStore.get?.("token") ?? null;
 
 			setAuthState(
 				user
 					? ({
 							user: user as User,
-							token,
+							token: null,
 						} as State)
 					: null,
 			);
@@ -287,7 +281,7 @@ export const createAuthRuntimeHooks = <
 					const response = await credentialsUseCase.register(data);
 					const hydratedUser = await authActionsUseCase.me();
 					const user = hydratedUser ?? response.user;
-					setAuthState({ user: user as User, token: response.token } as State);
+					setAuthState({ user: user as User, token: null } as State);
 					return { ...response, user };
 				} catch (error) {
 					setRegisterError(getAuthActionErrorMessage(error, "register"));
@@ -307,7 +301,7 @@ export const createAuthRuntimeHooks = <
 					const response = await credentialsUseCase.login(data);
 					const hydratedUser = await authActionsUseCase.me();
 					const user = hydratedUser ?? response.user;
-					setAuthState({ user: user as User, token: response.token } as State);
+					setAuthState({ user: user as User, token: null } as State);
 					return { ...response, user };
 				} catch (error) {
 					setLoginError(getAuthActionErrorMessage(error, "login"));
@@ -360,15 +354,19 @@ export const createAuthRuntimeHooks = <
 						redirectUrl: callbackUrl,
 						role: options?.role as never,
 					});
-					const token = await waitForGooglePopupResult({
+					await waitForGooglePopupResult({
 						requestId,
 						url: redirectUrl,
 					});
-					const response = await googleAuthUseCase.completeLogin(token);
+					const user = await authActionsUseCase.me();
+
+					if (!user) {
+						throw new GoogleAuthError("failed_to_load_user");
+					}
 
 					setAuthState({
-						user: response.user as User,
-						token: response.token,
+						user: user as User,
+						token: null,
 					} as State);
 					await completeAuthFlow({
 						...options,
