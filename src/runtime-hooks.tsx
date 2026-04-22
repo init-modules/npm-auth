@@ -1,36 +1,32 @@
 "use client";
 
+import type { Dispatch, SetStateAction } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { resolveAuthRedirectTo } from "./auth-redirect";
+import type { AuthFlowCompletionOptions } from "./domain";
+import { getAuthActionErrorMessage } from "./errors";
 import {
 	buildGoogleCallbackUrl,
 	createGoogleAuthRequestId,
 	GoogleAuthError,
 	getGoogleAuthErrorMessage,
 	isGoogleAuthPopupMessage,
-	resolveAuthRedirectTo,
 	resolveGoogleAuthRedirectTo,
-} from "@init-modules/auth-client";
+} from "./google-auth-popup";
 import type {
 	AuthCredentialsActionsState,
 	AuthGoogleActionsState,
+	AuthNavigationAdapter,
 	AuthRuntimeBaseState,
 	AuthSessionActionsState,
-} from "@init-modules/auth-nextjs";
-import type { Dispatch, SetStateAction } from "react";
-import { useCallback, useEffect, useState } from "react";
-import type { AuthFlowCompletionOptions } from "./domain";
-import { getAuthActionErrorMessage } from "./errors";
+} from "./types";
+
 import type {
 	AuthActionsUseCase,
 	AuthCookieStore,
 	CredentialsUseCase,
 	GoogleAuthUseCase,
 } from "./usecases";
-
-export type AuthNavigationAdapter = {
-	push: (href: string) => void;
-	refresh: () => void;
-	pathname?: string | null;
-};
 
 export type AuthRuntimeHookFactoryOptions<
 	State extends AuthRuntimeBaseState<User>,
@@ -272,6 +268,15 @@ export const createAuthRuntimeHooks = <
 		const [registerError, setRegisterError] = useState<string | null>(null);
 		const [isLoginRunning, setIsLoginRunning] = useState(false);
 		const [loginError, setLoginError] = useState<string | null>(null);
+		const [isPasswordResetRunning, setIsPasswordResetRunning] = useState(false);
+		const [passwordResetError, setPasswordResetError] = useState<string | null>(
+			null,
+		);
+		const [isRestorePasswordRunning, setIsRestorePasswordRunning] =
+			useState(false);
+		const [restorePasswordError, setRestorePasswordError] = useState<
+			string | null
+		>(null);
 
 		const register = useCallback(
 			async (data: Parameters<typeof credentialsUseCase.register>[0]) => {
@@ -313,13 +318,55 @@ export const createAuthRuntimeHooks = <
 			[setAuthState],
 		);
 
+		const requestPasswordReset = useCallback(
+			async (
+				data: Parameters<typeof credentialsUseCase.requestPasswordReset>[0],
+			) => {
+				try {
+					setIsPasswordResetRunning(true);
+					setPasswordResetError(null);
+					return await credentialsUseCase.requestPasswordReset(data);
+				} catch (error) {
+					setPasswordResetError(
+						getAuthActionErrorMessage(error, "password-reset"),
+					);
+					throw error;
+				} finally {
+					setIsPasswordResetRunning(false);
+				}
+			},
+			[],
+		);
+
+		const restorePassword = useCallback(
+			async (data: Parameters<typeof credentialsUseCase.restorePassword>[0]) => {
+				try {
+					setIsRestorePasswordRunning(true);
+					setRestorePasswordError(null);
+					return await credentialsUseCase.restorePassword(data);
+				} catch (error) {
+					setRestorePasswordError(getAuthActionErrorMessage(error, "password-reset"));
+					throw error;
+				} finally {
+					setIsRestorePasswordRunning(false);
+				}
+			},
+			[],
+		);
+
 		return {
 			login,
 			register,
+			requestPasswordReset,
+			restorePassword,
 			isRegisterRunning,
 			registerError,
 			isLoginRunning,
 			loginError,
+			isPasswordResetRunning,
+			passwordResetError,
+			isRestorePasswordRunning,
+			restorePasswordError,
 		};
 	};
 
