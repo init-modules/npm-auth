@@ -1,7 +1,7 @@
 {
 	"project_slug": "auth",
-	"name": "@init-modules/auth",
+	"name": "@init/auth",
 	"entry_type": "package",
-	"scope": "package:@init-modules/auth",
-	"package_name": "@init-modules/auth"
+	"scope": "package:@init/auth",
+	"package_name": "@init/auth"
 }

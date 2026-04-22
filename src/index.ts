@@ -5,7 +5,6 @@ export * from "./domain";
 export * from "./errors";
 export * from "./google-auth-popup";
 export * from "./next-client";
-export * from "./next-routes";
 export * from "./provider";
 export * from "./runtime-hooks";
 export * from "./schemas";
