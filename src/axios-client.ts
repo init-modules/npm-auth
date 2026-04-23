@@ -12,6 +12,7 @@ export type AuthAxiosClientOptions = {
 	ensureVisitorSession?: () => string | null;
 	resolveApiBaseUrl?: () => string | undefined;
 	timeout?: number;
+	withCredentials?: boolean;
 };
 
 export const createAuthAxiosLocaleStore = () => {
@@ -66,6 +67,7 @@ export const createAuthAxiosClient = ({
 	ensureVisitorSession,
 	resolveApiBaseUrl = resolveDefaultApiBaseUrl,
 	timeout = 3000,
+	withCredentials = false,
 }: AuthAxiosClientOptions = {}) => {
 	const localeStore = createAuthAxiosLocaleStore();
 	const getApiBaseUrl = resolveApiBaseUrl;
@@ -81,7 +83,7 @@ export const createAuthAxiosClient = ({
 	const api = axios.create({
 		baseURL: getApiBaseUrl(),
 		timeout,
-		withCredentials: true,
+		withCredentials,
 	});
 
 	api.interceptors.request.use(async (config) => {
@@ -115,7 +117,9 @@ export const createAuthAxiosClient = ({
 		} else {
 			token = Cookies.get(authCookieName) ?? null;
 			visitorSession =
-				ensureVisitorSession?.() ?? Cookies.get(visitorSessionCookieName) ?? null;
+				ensureVisitorSession?.() ??
+				Cookies.get(visitorSessionCookieName) ??
+				null;
 			requestLocale = document.documentElement.lang || null;
 		}
 

@@ -14,12 +14,13 @@ type AuthAxiosClientOptions = {
     ensureVisitorSession?: () => string | null;
     resolveApiBaseUrl?: () => string | undefined;
     timeout?: number;
+    withCredentials?: boolean;
 };
 declare const createAuthAxiosLocaleStore: () => {
     setRequestLocale(locale?: string | null): void;
     getRequestLocale(): string | null;
 };
-declare const createAuthAxiosClient: ({ authCookieName, visitorSessionCookieName, visitorSessionHeaderName, ensureVisitorSession, resolveApiBaseUrl, timeout, }?: AuthAxiosClientOptions) => {
+declare const createAuthAxiosClient: ({ authCookieName, visitorSessionCookieName, visitorSessionHeaderName, ensureVisitorSession, resolveApiBaseUrl, timeout, withCredentials, }?: AuthAxiosClientOptions) => {
     api: axios.AxiosInstance;
     getApiBaseUrl: () => string | undefined;
     getApiUrl: (path: string) => string;

@@ -76,7 +76,8 @@ var createAuthAxiosClient = ({
   visitorSessionHeaderName = "X-Visitor-Session",
   ensureVisitorSession: ensureVisitorSession2,
   resolveApiBaseUrl = resolveDefaultApiBaseUrl,
-  timeout = 3e3
+  timeout = 3e3,
+  withCredentials = false
 } = {}) => {
   const localeStore = createAuthAxiosLocaleStore();
   const getApiBaseUrl = resolveApiBaseUrl;
@@ -90,7 +91,7 @@ var createAuthAxiosClient = ({
   const api = axios.create({
     baseURL: getApiBaseUrl(),
     timeout,
-    withCredentials: true
+    withCredentials
   });
   api.interceptors.request.use(async (config) => {
     config.baseURL = getApiBaseUrl();
@@ -777,11 +778,31 @@ import Cookies3 from "js-cookie";
 var VISITOR_SESSION_COOKIE = "visitor_session";
 var VISITOR_SESSION_HEADER = "X-Visitor-Session";
 var VISITOR_SESSION_EXPIRY_DAYS = 3650;
+var formatUuidV4 = (bytes) => {
+  bytes[6] = bytes[6] & 15 | 64;
+  bytes[8] = bytes[8] & 63 | 128;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+  return [
+    hex.slice(0, 4).join(""),
+    hex.slice(4, 6).join(""),
+    hex.slice(6, 8).join(""),
+    hex.slice(8, 10).join(""),
+    hex.slice(10, 16).join("")
+  ].join("-");
+};
 function createVisitorSessionId() {
   if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.randomUUID === "function") {
     return globalThis.crypto.randomUUID();
   }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+  const bytes = new Uint8Array(16);
+  if (typeof globalThis.crypto !== "undefined" && typeof globalThis.crypto.getRandomValues === "function") {
+    globalThis.crypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+  return formatUuidV4(bytes);
 }
 function getVisitorSession() {
   return Cookies3.get(VISITOR_SESSION_COOKIE) ?? null;
